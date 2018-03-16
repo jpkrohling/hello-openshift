@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
@@ -15,21 +14,8 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	sp, _ := opentracing.StartSpanFromContext(r.Context(), "request")
 	defer sp.Finish()
 
-	response := os.Getenv("RESPONSE")
-	if len(response) == 0 {
-		response = "Hello OpenShift!"
-	}
-
-	fmt.Fprintln(w, response)
-	fmt.Println("Servicing request with a span.")
-}
-
-func listenAndServe(port string) {
-	fmt.Printf("serving on %s\n", port)
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		panic("ListenAndServe: " + err.Error())
-	}
+	fmt.Fprintln(w, "Hello")
+	fmt.Println("Request processed.")
 }
 
 func main() {
@@ -50,12 +36,10 @@ func main() {
 	}
 	defer closer.Close()
 
-	log.Println("Jaeger tracer initialized")
-
 	http.HandleFunc("/", helloHandler)
-	port := os.Getenv("PORT")
-	if len(port) == 0 {
-		port = "8080"
+
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		panic("ListenAndServe: " + err.Error())
 	}
-	listenAndServe(port)
 }
